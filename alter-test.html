@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>ALTER 1.2 — Test privato</title>
+<style>
+:root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#0b101a;color:#f3f5fb}main{max-width:650px;margin:auto;padding:22px 16px 40px}h1{margin:0 0 6px;font-size:29px}.sub{color:#aab6ce;margin:0 0 24px}.panel{background:#151e2d;border:1px solid #344158;border-radius:18px;padding:17px;margin-bottom:15px}label{display:block;font-size:14px;font-weight:650;margin-bottom:8px}input,textarea{width:100%;background:#0b1220;border:1px solid #52617a;border-radius:12px;color:white;padding:13px;font:inherit;font-size:16px}textarea{resize:vertical;min-height:105px}button{width:100%;padding:14px;border:0;border-radius:12px;background:#6694ff;color:#081329;font-weight:750;font-size:16px;margin-top:13px}button:disabled{opacity:.55}.hint{color:#aab6ce;font-size:13px;line-height:1.5}.answer{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.5}.status{color:#aab6ce;font-size:14px;margin-top:12px}.error{color:#ffadad}.ok{color:#a3efc2}a{color:#9bbaff}
+</style>
+</head>
+<body><main>
+<h1>🤖 ALTER 1.2</h1><p class="sub">Test privato della connessione OpenAI</p>
+<section class="panel"><label for="token">Token di prova (ALTER_TEST_TOKEN)</label><input id="token" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Incolla il token privato"><p class="hint">Il token rimane nel campo durante questa sessione. Non viene salvato in memoria permanente, né incluso nel codice pubblico. Non condividerlo con nessuno.</p></section>
+<section class="panel"><label for="message">Scrivi ad ALTER</label><textarea id="message" maxlength="2000">Ciao ALTER, chi sei? Presentati in italiano!</textarea><button id="send" type="button">Invia ad ALTER</button><div class="status" id="status" role="status" aria-live="polite"></div></section>
+<section class="panel"><label>Risposta</label><div class="answer" id="answer" aria-live="polite">In attesa del primo messaggio…</div></section>
+<p class="hint">Questo test funziona dalla pagina pubblicata su <strong>https://iltoscano1982.github.io</strong> (origine consentita dal Worker). Non caricare il token su GitHub. Le richieste valide possono consumare credito API. Non è ancora un sistema di accesso adatto a utenti pubblici.</p>
+</main>
+<script>
+const endpoint='https://alter-ai-12.9ywy5wp99.workers.dev/';
+const send=document.getElementById('send'),status=document.getElementById('status'),answer=document.getElementById('answer');
+send.addEventListener('click',async()=>{
+ const token=document.getElementById('token').value.trim();
+ const message=document.getElementById('message').value.trim();
+ if(!token){status.textContent='Inserisci il token privato.';status.className='status error';return;}
+ if(!message){status.textContent='Scrivi un messaggio.';status.className='status error';return;}
+ send.disabled=true;status.className='status';status.textContent='Contatto ALTER…';answer.textContent='Attendi…';
+ try{
+  const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),32000);
+  let response;
+  try{response=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({message}),signal:controller.signal,cache:'no-store'});}finally{clearTimeout(timer);}
+  let data;try{data=await response.json();}catch{throw Error('Risposta non JSON (HTTP '+response.status+').');}
+  if(!response.ok)throw Error((data.error||'Errore')+' (HTTP '+response.status+(data.upstream_status?', OpenAI '+data.upstream_status:'')+').');
+  answer.textContent=data.reply||'Nessuna risposta testuale.';status.textContent='Risposta ricevuta.';status.className='status ok';
+ }catch(e){answer.textContent='Nessuna risposta.';status.textContent=e.name==='AbortError'?'Tempo di attesa superato.':(e.message||'Errore di rete.');status.className='status error';}
+ finally{send.disabled=false;}
+});
+</script>
+</body></html>
