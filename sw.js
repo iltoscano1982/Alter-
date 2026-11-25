@@ -1,0 +1,1 @@
+self.addEventListener('push',e=>e.waitUntil(self.registration.showNotification('ALTER 2.0',{body:'Hai un promemoria in scadenza. Apri ALTER per consultarlo.',tag:'alter-reminder'})));self.addEventListener('notificationclick',e=>{e.notification.close();e.waitUntil(clients.openWindow('./'));});
